@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sports Community</title>
+</head>
+<body>
+    <h1>Sports Community</h1>
+    <h2>Recent Posts</h2>
+    {% for post in posts %}
+        <div>
+            <h3>{{ post.title }}</h3>
+            <p>By: {{ post.author.username }} | Category: {{ post.sport_category }}</p>
+            <p>{{ post.content }}</p>
+            <small>Posted: {{ post.created_at }}</small>
+            <hr>
+        </div>
+    {% empty %}
+        <p>No posts yet.</p>
+    {% endfor %}
+</body>
+</html>
