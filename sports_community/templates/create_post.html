@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Post - Sports Community</title>
+</head>
+<body>
+    <h1>Sports Community</h1>
+    <h2>Create New Post</h2>
+    
+    {% if user.is_authenticated %}
+        <p>Welcome, {{ user.username }}!</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Create Post</button>
+        </form>
+        
+        <p><a href="{% url 'community:home' %}">Cancel</a></p>
+    {% else %}
+        <p>You must be logged in to create posts.</p>
+        <p><a href="{% url 'login' %}">Login</a> | <a href="{% url 'community:register' %}">Register</a></p>
+    {% endif %}
+</body>
+</html>

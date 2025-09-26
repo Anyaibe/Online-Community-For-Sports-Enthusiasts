@@ -4,18 +4,37 @@
     <title>Sports Community</title>
 </head>
 <body>
-    <h1>Sports Community</h1>
-    <h2>Recent Posts</h2>
-    {% for post in posts %}
-        <div>
-            <h3>{{ post.title }}</h3>
-            <p>By: {{ post.author.username }} | Category: {{ post.sport_category }}</p>
-            <p>{{ post.content }}</p>
-            <small>Posted: {{ post.created_at }}</small>
-            <hr>
-        </div>
-    {% empty %}
-        <p>No posts yet.</p>
-    {% endfor %}
+    <header>
+        <h1>Sports Community</h1>
+        <nav>
+            <a href="{% url 'community:home' %}">Home</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'community:create_post' %}">Create Post</a>
+                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" style="background:none;border:none;color:blue;cursor:pointer;">
+                        Logout ({{ user.username }})
+                    </button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'community:register' %}">Register</a>
+            {% endif %}
+        </nav>
+    </header>    
+
+    <main>
+        <h2>Recent Posts</h2>
+        {% for post in posts %}
+            <div style="border: 1px solid #ddd; margin: 10px 0; padding: 15px;">
+                <h3>{{ post.title }}</h3>
+                <p><strong>By:</strong> {{ post.author.username }} | <strong>Category:</strong> {{ post.sport_category }}</p>
+                <p>{{ post.content }}</p>
+                <small>Posted: {{ post.created_at|date:"M d, Y" }}</small>
+            </div>
+        {% empty %}
+            <p>No posts yet. <a href="{% url 'community:create_post' %}">Create the first one!</a></p>
+        {% endfor %}
+    </main>
 </body>
 </html>
