@@ -2,13 +2,39 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
 
 def home(request):
-    posts = Post.objects.all()
-    return render(request, 'home.html', {'posts': posts})
+    posts = Post.objects.all().order_by('-created_at')
+    
+    # Get category from URL parameter
+    category = request.GET.get('category')
+    search_query = request.GET.get('search')
+    
+    # Filter by category if specified
+    if category and category != 'all':
+        posts = posts.filter(sport_category=category)
+    
+    # Filter by search query if specified
+    if search_query:
+        posts = posts.filter(
+            Q(title__icontains=search_query) | 
+            Q(content__icontains=search_query)
+        )
+    
+    # Get available categories for filter buttons
+    categories = Post.SPORT_CHOICES
+    
+    return render(request, 'home.html', {
+        'posts': posts,
+        'categories': categories,
+        'current_category': category,
+        'search_query': search_query,
+    })
 
+# Keep all other functions the same...
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
