@@ -1,19 +1,82 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Register - Sports Community</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join Community - Sports Arena</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <h1>Sports Community</h1>
-    <h2>Create Account</h2>
-    
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Register</button>
-    </form>
-    
-    <p><a href="{% url 'login' %}">Already have an account? Login here</a></p>
-    <p><a href="{% url 'community:home' %}">Back to Home</a></p>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-icon">🎯</div>
+                <h1 class="auth-title">Join Sports Arena!</h1>
+                <p class="auth-subtitle">Create your account and connect with fellow sports enthusiasts</p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_username" class="form-label">Choose Username</label>
+                    <input type="text" name="username" id="id_username" class="form-input" 
+                            placeholder="Your unique username" required>
+                    {% if form.username.errors %}
+                        <div class="error-message">
+                            {{ form.username.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password1" class="form-label">Create Password</label>
+                    <input type="password" name="password1" id="id_password1" class="form-input" 
+                            placeholder="Strong password (8+ characters)" required>
+                    {% if form.password1.errors %}
+                        <div class="error-message">
+                            {{ form.password1.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password2" class="form-label">Confirm Password</label>
+                    <input type="password" name="password2" id="id_password2" class="form-input" 
+                            placeholder="Confirm your password" required>
+                    {% if form.password2.errors %}
+                        <div class="error-message">
+                            {{ form.password2.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="tips-section mb-4">
+                    <p class="form-help mb-0">
+                        🛡️ By joining Sports Arena, you agree to be respectful in discussions and follow community guidelines. Let's create a positive environment for all sports fans!
+                    </p>
+                </div>
+
+                <button type="submit" class="btn btn-success btn-full btn-large mb-4">
+                    🏆 Create My Account
+                </button>
+            </form>
+
+            <div class="auth-divider">
+                <span>or</span>
+            </div>
+
+            <div class="auth-links">
+                <p>
+                    Already have an account? 
+                    <a href="{% url 'login' %}">Sign in here →</a>
+                </p>
+                <p>
+                    <a href="{% url 'community:home' %}">← Back to Home</a>
+                </p>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user.username }} - Sports Arena</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="header-logo">
+                <h1>Sports Arena</h1>
+            </div>
+            
+            <nav class="header-nav">
+                <a href="{% url 'community:home' %}" class="nav-link">Home</a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'community:create_post' %}" class="nav-link">Create Post</a>
+                    <form method="post" action="{% url 'logout' %}" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">Logout {{ user.username }}</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">Sign In</a>
+                    <a href="{% url 'community:register' %}" class="nav-link">Join Community</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="container">
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="{% url 'community:home' %}" class="btn btn-secondary btn-small">← Back to Home</a>
+        </div>
+
+        <!-- User Profile Card -->
+        <div class="post-card post-card-featured">
+            <div class="author-info mb-4">
+                <div class="author-avatar author-avatar-large">
+                    {{ profile_user.username|first|upper }}
+                </div>
+                <div class="author-details">
+                    <h1 class="section-title text-left mb-0">{{ profile_user.username }}</h1>
+                    <p>Member since {{ profile_user.date_joined|date:"M d, Y" }}</p>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="flex gap-4 mb-4">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_posts }}</div>
+                    <div class="stat-label">Post{{ total_posts|pluralize }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_comments }}</div>
+                    <div class="stat-label">Comment{{ total_comments|pluralize }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User's Posts -->
+        <div class="posts-section">
+            <h2 class="section-title">📝 Posts by {{ profile_user.username }}</h2>
+            
+            <div class="posts-grid">
+                {% for post in user_posts %}
+                    <article class="post-card">
+                        <div class="post-header">
+                            <h3 class="post-title">
+                                <a href="{% url 'community:post_detail' post.pk %}">{{ post.title }}</a>
+                            </h3>
+                            
+                            <div class="post-meta">
+                                <div class="post-category">
+                                    {% if post.sport_category == 'football' %}Football
+                                    {% elif post.sport_category == 'basketball' %}Basketball
+                                    {% elif post.sport_category == 'soccer' %}Soccer
+                                    {% elif post.sport_category == 'tennis' %}Tennis
+                                    {% else %}{{ post.get_sport_category_display }}{% endif %}
+                                </div>
+                                
+                                <div class="post-meta-item">
+                                    <span>📅</span>
+                                    <span>{{ post.created_at|date:"M d, Y" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="post-content">
+                            {{ post.content|truncatewords:30 }}
+                        </div>
+                        
+                        <div class="post-footer">
+                            <span class="post-date">{{ post.created_at|date:"M d, Y \a\t H:i" }}</span>
+                            <a href="{% url 'community:post_detail' post.pk %}#comments" class="post-comments">
+                                <span>💬</span>
+                                <span>{{ post.comments.count }} comment{{ post.comments.count|pluralize }}</span>
+                            </a>
+                        </div>
+                    </article>
+                {% empty %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📝</div>
+                        <h3 class="empty-state-title">No Posts Yet</h3>
+                        <p class="empty-state-description">
+                            {{ profile_user.username }} hasn't created any posts yet.
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Comments -->
+        {% if user_comments %}
+        <div class="comments-section">
+            <h3 class="comments-title">💬 Recent Comments</h3>
+            
+            {% for comment in user_comments %}
+                <div class="comment">
+                    <div class="comment-header">
+                        <div>
+                            <div class="comment-author">
+                                On: <a href="{% url 'community:post_detail' comment.post.pk %}">{{ comment.post.title }}</a>
+                            </div>
+                            <div class="comment-date">{{ comment.created_at|date:"M d, Y \a\t H:i" }}</div>
+                        </div>
+                    </div>
+                    <div class="comment-content">
+                        {{ comment.content|truncatewords:20 }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-main">&copy; 2025 Sports Arena. Connect with fellow sports enthusiasts.</p>
+            <p class="footer-sub">Share • Discuss • Celebrate Sports Together 🏆</p>
+        </div>
+    </footer>
+</body>
+</html>

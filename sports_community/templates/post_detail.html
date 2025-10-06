@@ -1,69 +1,206 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>{{ post.title }} - Sports Community</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.title }} - Sports Arena</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <header>
-        <h1>Sports Community</h1>
-        <nav>
-            <a href="{% url 'community:home' %}">Home</a>
-            {% if user.is_authenticated %}
-                <a href="{% url 'community:create_post' %}">Create Post</a>
-                <form method="post" action="{% url 'logout' %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit">Logout ({{ user.username }})</button>
-                </form>
-            {% else %}
-                <a href="{% url 'login' %}">Login</a>
-                <a href="{% url 'community:register' %}">Register</a>
-            {% endif %}
-        </nav>
+        <div class="header-container">
+            <div class="header-logo">
+                <h1>Sports Arena</h1>
+            </div>
+            
+            <nav class="header-nav">
+                <a href="{% url 'community:home' %}" class="nav-link">Home</a>
+                
+                {% if user.is_authenticated %}
+                    <a href="{% url 'community:create_post' %}" class="nav-link">Create Post</a>
+                    <form method="post" action="{% url 'logout' %}" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">Logout {{ user.username }}</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">Sign In</a>
+                    <a href="{% url 'community:register' %}" class="nav-link">Join Community</a>
+                {% endif %}
+            </nav>
+        </div>
     </header>
 
-    <main>
-        <!-- Post Details -->
-        <article style="border: 2px solid #ddd; padding: 20px; margin: 20px 0;">
-            <h2>{{ post.title }}</h2>
-            <p><strong>By:</strong> {{ post.author.username }} | 
-                <strong>Category:</strong> {{ post.sport_category }} | 
-                <strong>Posted:</strong> {{ post.created_at|date:"M d, Y at H:i" }}</p>
-            <div style="margin: 15px 0;">
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="container">
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="{% url 'community:home' %}" class="btn btn-secondary btn-small">← Back to Discussions</a>
+        </div>
+
+        <article class="post-card post-card-featured">
+            <div class="post-header">
+                <h1 class="post-title post-title-large">
+                    <a href="#">{{ post.title }}</a>
+                </h1>
+                
+                <div class="post-meta mb-4">
+                    <div class="author-info">
+                        <div class="author-avatar author-avatar-large">
+                            {{ post.author.username|first|upper }}
+                        </div>
+                        <div class="author-details">
+                            <h4>
+                                <a href="{% url 'community:user_profile' post.author.username %}" class="comment-author">
+                                    {{ post.author.username }}
+                                </a>
+                            </h4>
+                            <p>Community Member</p>
+                        </div>
+                    </div>
+                    
+                    <div class="post-category">
+                        {% if post.sport_category == 'football' %}🏈 Football
+                        {% elif post.sport_category == 'basketball' %}🏀 Basketball
+                        {% elif post.sport_category == 'soccer' %}⚽ Soccer
+                        {% elif post.sport_category == 'tennis' %}🎾 Tennis
+                        {% else %}🏅 {{ post.get_sport_category_display }}{% endif %}
+                    </div>
+                    
+                    <div class="post-meta-item">
+                        <span>📅</span>
+                        <span>{{ post.created_at|date:"M d, Y \a\t H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="post-content-large">
                 {{ post.content|linebreaks }}
+            </div>
+
+            {% if user == post.author %}
+            <div class="flex gap-2 mb-4">
+                <a href="{% url 'community:edit_post' post.pk %}" class="btn btn-secondary">
+                    ✏️ Edit Post
+                </a>
+                <a href="{% url 'community:delete_post' post.pk %}" class="btn btn-primary">
+                    🗑️ Delete Post
+                </a>
+            </div>
+            {% endif %}
+            
+            <div class="post-footer">
+                <div class="flex items-center gap-2">
+                    <span class="post-date">💬 {{ comments.count }} comment{{ comments.count|pluralize }}</span>
+                    <span class="post-date">•</span>
+                    <span class="post-date">👀 Discussion</span>
+                </div>
+                <a href="#comments" class="btn btn-primary btn-small">Join Discussion</a>
             </div>
         </article>
 
-        <!-- Add Comment Form -->
-        <section style="margin: 30px 0;">
+        <section id="add-comment" class="form-section">
             {% if user.is_authenticated %}
-                <h3>Add a Comment</h3>
-                <form method="post" style="margin-bottom: 30px;">
+                <div class="author-info mb-4">
+                    <div class="author-avatar">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <div class="author-details">
+                        <h3>Share Your Thoughts</h3>
+                        <p>What do you think about this topic, {{ user.username }}?</p>
+                    </div>
+                </div>
+                
+                <form method="post">
                     {% csrf_token %}
-                    {{ comment_form.as_p }}
-                    <button type="submit">Post Comment</button>
+                    <div class="form-group">
+                        <label for="id_content" class="form-label">Your Comment</label>
+                        <textarea name="content" id="id_content" class="form-textarea" 
+                                    placeholder="Add your thoughts to the discussion..." required></textarea>
+                    </div>
+                    <div class="flex justify-between items-center gap-2">
+                        <p class="form-help">
+                            💡 <strong>Tip:</strong> Be respectful and constructive in your comments
+                        </p>
+                        <button type="submit" class="btn btn-success">Post Comment</button>
+                    </div>
                 </form>
             {% else %}
-                <p><a href="{% url 'login' %}">Login</a> to comment on this post.</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔐</div>
+                    <h3 class="empty-state-title">Join the Discussion</h3>
+                    <p class="empty-state-description">
+                        Sign in or create an account to share your thoughts and connect with other sports fans.
+                    </p>
+                    <div class="action-buttons">
+                        <a href="{% url 'login' %}" class="btn btn-primary">Sign In</a>
+                        <a href="{% url 'community:register' %}" class="btn btn-success">Join Community</a>
+                    </div>
+                </div>
             {% endif %}
         </section>
 
-        <!-- Comments Section -->
-        <section>
-            <h3>Comments ({{ comments.count }})</h3>
+        <section id="comments" class="comments-section">
+            <div class="comments-header">
+                <div class="comments-title">💬 Discussion</div>
+                <div class="comments-count">{{ comments.count }} comment{{ comments.count|pluralize }}</div>
+            </div>
             
             {% for comment in comments %}
-                <div style="border-left: 3px solid #3498db; padding: 10px; margin: 10px 0; background-color: #f8f9fa;">
-                    <p><strong>{{ comment.author.username }}</strong> 
-                        <small>{{ comment.created_at|date:"M d, Y at H:i" }}</small></p>
-                    <p>{{ comment.content|linebreaks }}</p>
+                <div class="comment">
+                    <div class="comment-header">
+                        <div class="author-avatar author-avatar-small">
+                            {{ comment.author.username|first|upper }}
+                        </div>
+                        <div>
+                            <div class="comment-author">
+                                <a href="{% url 'community:user_profile' post.author.username %}" class="comment-author">
+                                    {{ post.author.username }}
+                                </a>
+                            </div>
+                            <div class="comment-date">{{ comment.created_at|date:"M d, Y \a\t H:i" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="comment-content comment-content-indented">
+                        {{ comment.content|linebreaks }}
+                    </div>
                 </div>
             {% empty %}
-                <p>No comments yet. Be the first to comment!</p>
+                <div class="empty-state">
+                    <div class="empty-state-icon">💭</div>
+                    <h4 class="empty-state-title">No Comments Yet</h4>
+                    <p class="empty-state-description">Be the first to share your thoughts on this topic!</p>
+                </div>
             {% endfor %}
         </section>
 
-        <!-- Back to Home -->
-        <p><a href="{% url 'community:home' %}">&larr; Back to all posts</a></p>
-    </main>
+        <div class="action-section">
+            <div class="action-buttons">
+                <a href="{% url 'community:home' %}" class="btn btn-secondary">← Back to All Posts</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'community:create_post' %}" class="btn btn-success">Create New Post</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-main">&copy; 2025 Sports Arena. Connect with fellow sports enthusiasts.</p>
+            <p class="footer-sub">Share • Discuss • Celebrate Sports Together 🏆</p>
+        </div>
+    </footer>
 </body>
 </html>

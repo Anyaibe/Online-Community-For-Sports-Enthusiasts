@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Post - Sports Arena</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="header-logo">
+                <h1>Sports Arena</h1>
+            </div>
+            
+            <nav class="header-nav">
+                <a href="{% url 'community:home' %}" class="nav-link">Home</a>
+                <a href="{% url 'community:create_post' %}" class="nav-link">Create Post</a>
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">Logout {{ user.username }}</button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Messages Display -->
+    {% if messages %}
+    <div class="container">
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="{% url 'community:post_detail' post.pk %}" class="btn btn-secondary btn-small">← Back to Post</a>
+        </div>
+
+        <div class="form-section form-section-featured text-center mb-4">
+            <div class="auth-icon">✏️</div>
+            <h2 class="auth-title">Edit Your Post</h2>
+            <p class="auth-subtitle">Update your thoughts and keep the conversation fresh</p>
+        </div>
+
+        <div class="form-section">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="id_title" class="form-label">Post Title</label>
+                    <input type="text" name="title" id="id_title" class="form-input" 
+                            value="{{ form.title.value }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_sport_category" class="form-label">Sport Category</label>
+                    <select name="sport_category" id="id_sport_category" class="form-select" required>
+                        <option value="football" {% if form.sport_category.value == 'football' %}selected{% endif %}>🏈 Football</option>
+                        <option value="basketball" {% if form.sport_category.value == 'basketball' %}selected{% endif %}>🏀 Basketball</option>
+                        <option value="soccer" {% if form.sport_category.value == 'soccer' %}selected{% endif %}>⚽ Soccer</option>
+                        <option value="tennis" {% if form.sport_category.value == 'tennis' %}selected{% endif %}>🎾 Tennis</option>
+                        <option value="other" {% if form.sport_category.value == 'other' %}selected{% endif %}>🏅 Other Sports</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="id_content" class="form-label">Your Thoughts</label>
+                    <textarea name="content" id="id_content" class="form-textarea form-textarea-large" required>{{ form.content.value }}</textarea>
+                </div>
+
+                <div class="flex justify-between items-center mt-4 gap-2">
+                    <a href="{% url 'community:post_detail' post.pk %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-success">💾 Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-main">&copy; 2025 Sports Arena. Connect with fellow sports enthusiasts.</p>
+            <p class="footer-sub">Share • Discuss • Celebrate Sports Together 🏆</p>
+        </div>
+    </footer>
+</body>
+</html>

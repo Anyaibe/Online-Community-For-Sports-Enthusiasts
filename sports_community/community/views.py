@@ -1,46 +1,67 @@
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
+from django.contrib.auth.models import User
+from django.db.models import Q, Count
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
 
 def home(request):
-    posts = Post.objects.all().order_by('-created_at')
+    posts = Post.objects.all()
     
-    # Get category from URL parameter
+    # Get parameters
     category = request.GET.get('category')
     search_query = request.GET.get('search')
+    sort_by = request.GET.get('sort', 'newest')  # Default to newest
     
-    # Filter by category if specified
+    # Filter by category
     if category and category != 'all':
         posts = posts.filter(sport_category=category)
     
-    # Filter by search query if specified
+    # Filter by search
     if search_query:
         posts = posts.filter(
             Q(title__icontains=search_query) | 
             Q(content__icontains=search_query)
         )
     
-    # Get available categories for filter buttons
+    # Sort posts
+    if sort_by == 'oldest':
+        posts = posts.order_by('created_at')
+    elif sort_by == 'most_commented':
+        posts = posts.annotate(comment_count=Count('comments')).order_by('-comment_count')
+    else:  # newest (default)
+        posts = posts.order_by('-created_at')
+    
+    # Get categories
     categories = Post.SPORT_CHOICES
+    
+    # Calculate community stats
+    total_posts = Post.objects.count()
+    total_users = User.objects.count()
+    total_comments = Comment.objects.count()
+    
     
     return render(request, 'home.html', {
         'posts': posts,
         'categories': categories,
         'current_category': category,
         'search_query': search_query,
+        'current_sort': sort_by,
+        'total_posts': total_posts,
+        'total_users': total_users,
+        'total_comments': total_comments,
     })
 
-# Keep all other functions the same...
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
+            messages.success(request, f'Welcome to Sports Arena, {user.username}! 🎉')
             return redirect('community:home')
     else:
         form = UserCreationForm()
@@ -54,6 +75,7 @@ def create_post(request):
             post = form.save(commit=False)
             post.author = request.user
             post.save()
+            messages.success(request, 'Your post has been published! 🚀')
             return redirect('community:home')
     else:
         form = PostForm()
@@ -71,6 +93,7 @@ def post_detail(request, pk):
                 comment.post = post
                 comment.author = request.user
                 comment.save()
+                messages.success(request, 'Comment added successfully! 💬')
                 return redirect('community:post_detail', pk=pk)
         else:
             return redirect('login')
@@ -82,3 +105,52 @@ def post_detail(request, pk):
         'comments': comments,
         'comment_form': comment_form,
     })
+
+def user_profile(request, username):
+    """Display user profile with their posts and stats"""
+    profile_user = get_object_or_404(User, username=username)
+    user_posts = Post.objects.filter(author=profile_user).order_by('-created_at')
+    user_comments = Comment.objects.filter(author=profile_user).order_by('-created_at')[:5]
+    
+    # Calculate stats
+    total_posts = user_posts.count()
+    total_comments = user_comments.count()
+    
+    context = {
+        'profile_user': profile_user,
+        'user_posts': user_posts,
+        'user_comments': user_comments,
+        'total_posts': total_posts,
+        'total_comments': total_comments,
+    }
+    return render(request, 'user_profile.html', context)
+
+@login_required
+def edit_post(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    if post.author != request.user:
+        messages.error(request, 'You can only edit your own posts.')
+        return redirect('community:post_detail', pk=pk)
+    
+    if request.method == 'POST':
+        form = PostForm(request.POST, instance=post)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your post has been updated! 💾')
+            return redirect('community:post_detail', pk=pk)
+    else:
+        form = PostForm(instance=post)
+    return render(request, 'edit_post.html', {'form': form, 'post': post})
+
+@login_required
+def delete_post(request, pk):
+    post = get_object_or_404(Post, pk=pk)
+    if post.author != request.user:
+        messages.error(request, 'You can only delete your own posts.')
+        return redirect('community:post_detail', pk=pk)
+    
+    if request.method == 'POST':
+        post.delete()
+        messages.success(request, 'Your post has been deleted.')
+        return redirect('community:home')
+    return render(request, 'delete_confirm.html', {'post': post})

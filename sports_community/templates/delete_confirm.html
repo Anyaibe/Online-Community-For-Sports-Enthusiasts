@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete Post - Sports Arena</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="header-logo">
+                <h1>Sports Arena</h1>
+            </div>
+            
+            <nav class="header-nav">
+                <a href="{% url 'community:home' %}" class="nav-link">Home</a>
+                <a href="{% url 'community:create_post' %}" class="nav-link">Create Post</a>
+                <form method="post" action="{% url 'logout' %}" class="logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">Logout {{ user.username }}</button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="empty-state">
+            <div class="empty-state-icon">⚠️</div>
+            <h2 class="empty-state-title">Delete This Post?</h2>
+            <p class="empty-state-description">
+                Are you sure you want to delete "<strong>{{ post.title }}</strong>"?<br>
+                This action cannot be undone and all comments will be lost.
+            </p>
+            
+            <form method="post" class="flex justify-center gap-2 mt-4">
+                {% csrf_token %}
+                <a href="{% url 'community:post_detail' post.pk %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">🗑️ Yes, Delete Post</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-main">&copy; 2025 Sports Arena. Connect with fellow sports enthusiasts.</p>
+            <p class="footer-sub">Share • Discuss • Celebrate Sports Together 🏆</p>
+        </div>
+    </footer>
+</body>
+</html>
