@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.log
+
+# Virtual environment
+venv/
+env/
+ENV/
+*.env
+
+# Django
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+*.pot
+*.pyc
+
+# VSCode / IDE
+.vscode/
+.idea/
+*.swp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Pip cache
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Pytest / Coverage
+.coverage
+.tox/
+.cache/
+nosetests.xml
+coverage.xml
+
+# Migrations cache (optional — only if you want to ignore)
+# community/migrations/
+
+# Node / frontend (if you later add JS or React)
+node_modules/
+dist/
+build/
