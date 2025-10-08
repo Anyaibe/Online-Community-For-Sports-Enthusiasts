@@ -3,12 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
     <title>Delete Post - Sports Arena</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <header>
+
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}    
+
         <div class="header-container">
             <div class="header-logo">
                 <h1>Sports Arena</h1>
@@ -16,6 +28,7 @@
             
             <nav class="header-nav">
                 <a href="{% url 'community:home' %}" class="nav-link">Home</a>
+                <a href="{% url 'community:activity_feed' %}" class="nav-link">Activity</a>
                 <a href="{% url 'community:create_post' %}" class="nav-link">Create Post</a>
                 <form method="post" action="{% url 'logout' %}" class="logout-form">
                     {% csrf_token %}

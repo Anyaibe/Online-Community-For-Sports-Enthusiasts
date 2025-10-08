@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <meta name="description" content="Sports Arena - Connect with fellow sports enthusiasts, discuss your favorite teams, and share your passion for sports.">
+    <meta name="keywords" content="sports, community, discussion, football, basketball, soccer, tennis">
     <title>Sports Arena - Home</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -16,6 +19,7 @@
             
             <nav class="header-nav">
                 <a href="{% url 'community:home' %}" class="nav-link">Home</a>
+                <a href="{% url 'community:activity_feed' %}" class="nav-link">Activity</a>
                 
                 {% if user.is_authenticated %}
                     <a href="{% url 'community:create_post' %}" class="nav-link">Create Post</a>
@@ -33,14 +37,12 @@
 
     <!-- Messages Display -->
     {% if messages %}
-    <div class="container">
-        <div class="messages-container">
-            {% for message in messages %}
-                <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
+    <div class="messages-container">
+        {% for message in messages %}
+            <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
     </div>
     {% endif %}
 
@@ -188,7 +190,11 @@
                         </div>
                         
                         <div class="post-footer">
-                            <span class="post-date">{{ post.created_at|date:"M d, Y \a\t H:i" }}</span>
+                            <div class="flex items-center gap-2">
+                                <span class="post-date">{{ post.created_at|date:"M d, Y \a\t H:i" }}</span>
+                                <span class="post-date">•</span>
+                                <span class="post-date">👀 {{ post.views }}</span>
+                            </div>
                             <a href="{% url 'community:post_detail' post.pk %}#comments" class="post-comments">
                                 <span>💬</span>
                                 <span>{{ post.comments.count }} comment{{ post.comments.count|pluralize }}</span>
@@ -239,6 +245,45 @@
             </div>
         </div>
 
+        <!-- Pagination Controls -->
+        {% if page_obj.has_other_pages %}
+        <div class="pagination-section">
+            <div class="pagination-container">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" 
+                        class="pagination-btn pagination-btn-text">
+                        « First
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" 
+                        class="pagination-btn">
+                        ‹ Previous
+                    </a>
+                {% endif %}
+
+                <div class="pagination-info">
+                    <span class="pagination-current">Page {{ page_obj.number }}</span>
+                    <span class="pagination-separator">of</span>
+                    <span class="pagination-total">{{ page_obj.paginator.num_pages }}</span>
+                </div>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" 
+                        class="pagination-btn">
+                        Next ›
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if current_sort %}&sort={{ current_sort }}{% endif %}" 
+                        class="pagination-btn pagination-btn-text">
+                        Last »
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="pagination-summary">
+                Showing {{ page_obj.start_index }} - {{ page_obj.end_index }} of {{ page_obj.paginator.count }} posts
+            </div>
+        </div>
+        {% endif %}
+
         {% if posts and user.is_authenticated %}
         <div class="form-section text-center">
             <h3 class="action-title">💭 Got Something to Share?</h3>
@@ -267,5 +312,9 @@
             <p class="footer-sub">Share • Discuss • Celebrate Sports Together 🏆</p>
         </div>
     </footer>
+    
+    <!-- Auto-dismiss messages script -->
+    {% load static %}
+    <script src="{% static 'js/messages.js' %}"></script>
 </body>
 </html>

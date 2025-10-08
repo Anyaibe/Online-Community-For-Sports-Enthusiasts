@@ -5,11 +5,12 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models import Q, Count
+from django.core.paginator import Paginator  
 from .models import Post, Comment
 from .forms import PostForm, CommentForm
 
 def home(request):
-    posts = Post.objects.all()
+    posts = Post.objects.select_related('author').prefetch_related('comments').all()
     
     # Get parameters
     category = request.GET.get('category')
@@ -35,6 +36,11 @@ def home(request):
     else:  # newest (default)
         posts = posts.order_by('-created_at')
     
+    # PAGINATION HERE
+    paginator = Paginator(posts, 10)  # Show 10 posts per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
     # Get categories
     categories = Post.SPORT_CHOICES
     
@@ -45,7 +51,8 @@ def home(request):
     
     
     return render(request, 'home.html', {
-        'posts': posts,
+        'posts': page_obj,
+        'page_obj': page_obj,
         'categories': categories,
         'current_category': category,
         'search_query': search_query,
@@ -82,8 +89,19 @@ def create_post(request):
     return render(request, 'create_post.html', {'form': form})
 
 def post_detail(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    comments = post.comments.all()
+    post = get_object_or_404(
+        Post.objects.select_related('author'), 
+        pk=pk
+    )
+    
+    # Increment view count (only once per session)
+    session_key = f'post_{pk}_viewed'
+    if not request.session.get(session_key, False):
+        post.views += 1
+        post.save(update_fields=['views'])
+        request.session[session_key] = True
+    
+    comments = post.comments.select_related('author').all()
     
     if request.method == 'POST':
         if request.user.is_authenticated:
@@ -109,16 +127,22 @@ def post_detail(request, pk):
 def user_profile(request, username):
     """Display user profile with their posts and stats"""
     profile_user = get_object_or_404(User, username=username)
-    user_posts = Post.objects.filter(author=profile_user).order_by('-created_at')
+    user_posts_all = Post.objects.filter(author=profile_user).order_by('-created_at')
     user_comments = Comment.objects.filter(author=profile_user).order_by('-created_at')[:5]
     
+    # Add pagination for user posts
+    paginator = Paginator(user_posts_all, 5)  # 5 posts per page on profile
+    page_number = request.GET.get('page')
+    user_posts = paginator.get_page(page_number)
+    
     # Calculate stats
-    total_posts = user_posts.count()
-    total_comments = user_comments.count()
+    total_posts = user_posts_all.count()
+    total_comments = Comment.objects.filter(author=profile_user).count()
     
     context = {
         'profile_user': profile_user,
         'user_posts': user_posts,
+        'page_obj': user_posts,  # For pagination controls
         'user_comments': user_comments,
         'total_posts': total_posts,
         'total_comments': total_comments,
@@ -154,3 +178,59 @@ def delete_post(request, pk):
         messages.success(request, 'Your post has been deleted.')
         return redirect('community:home')
     return render(request, 'delete_confirm.html', {'post': post})
+
+def activity_feed(request):
+    """Show recent activity across the community"""
+    # Get recent posts
+    recent_posts = Post.objects.all().order_by('-created_at')[:10]
+    
+    # Get recent comments with their posts
+    recent_comments = Comment.objects.select_related('post', 'author').order_by('-created_at')[:15]
+    
+    # Combine and sort by date
+    activities = []
+    
+    for post in recent_posts:
+        activities.append({
+            'type': 'post',
+            'object': post,
+            'user': post.author,
+            'timestamp': post.created_at,
+        })
+    
+    for comment in recent_comments:
+        activities.append({
+            'type': 'comment',
+            'object': comment,
+            'user': comment.author,
+            'timestamp': comment.created_at,
+        })
+    
+    # Sort all activities by timestamp
+    activities.sort(key=lambda x: x['timestamp'], reverse=True)
+    activities = activities[:20]  # Show top 20 activities
+    
+    return render(request, 'activity_feed.html', {'activities': activities})
+
+@login_required
+def delete_comment(request, pk):
+    """Delete a comment"""
+    comment = get_object_or_404(Comment, pk=pk)
+    post_pk = comment.post.pk
+    
+    # Only allow author to delete
+    if comment.author != request.user:
+        messages.error(request, 'You can only delete your own comments.')
+        return redirect('community:post_detail', pk=post_pk)
+    
+    comment.delete()
+    messages.success(request, 'Comment deleted successfully.')
+    return redirect('community:post_detail', pk=post_pk)
+
+def custom_404(request, exception):
+    """Custom 404 error handler"""
+    return render(request, '404.html', status=404)
+
+def custom_500(request):
+    """Custom 500 error handler"""
+    return render(request, '500.html', status=500)

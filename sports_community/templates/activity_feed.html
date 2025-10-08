@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <title>Recent Activity - Sports Arena</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="header-logo">
+                <h1>Sports Arena</h1>
+            </div>
+            
+            <nav class="header-nav">
+                <a href="{% url 'community:home' %}" class="nav-link">Home</a>
+                <a href="{% url 'community:activity_feed' %}" class="nav-link">Activity</a>
+                
+                {% if user.is_authenticated %}
+                    <a href="{% url 'community:create_post' %}" class="nav-link">Create Post</a>
+                    <form method="post" action="{% url 'logout' %}" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">Logout {{ user.username }}</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'login' %}" class="nav-link">Sign In</a>
+                    <a href="{% url 'community:register' %}" class="nav-link">Join Community</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+            <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="{% url 'community:home' %}" class="btn btn-secondary btn-small">← Back to Home</a>
+        </div>
+
+        <h2 class="section-title">📊 Recent Community Activity</h2>
+
+        <div class="activity-feed">
+            {% for activity in activities %}
+                <div class="activity-item">
+                    <div class="activity-header">
+                        <div class="author-avatar author-avatar-small">
+                            {{ activity.user.username|first|upper }}
+                        </div>
+                        <div class="activity-info">
+                            <div class="activity-user">
+                                <a href="{% url 'community:user_profile' activity.user.username %}" class="comment-author">
+                                    {{ activity.user.username }}
+                                </a>
+                                {% if activity.type == 'post' %}
+                                    <span class="activity-action">created a post</span>
+                                {% else %}
+                                    <span class="activity-action">commented on</span>
+                                {% endif %}
+                            </div>
+                            <div class="activity-time">{{ activity.timestamp|timesince }} ago</div>
+                        </div>
+                    </div>
+
+                    <div class="activity-content">
+                        {% if activity.type == 'post' %}
+                            <a href="{% url 'community:post_detail' activity.object.pk %}" class="activity-link">
+                                <div class="activity-title">{{ activity.object.title }}</div>
+                                <div class="activity-excerpt">{{ activity.object.content|truncatewords:20 }}</div>
+                                <div class="activity-meta">
+                                    <span class="post-category">{{ activity.object.get_sport_category_display }}</span>
+                                    <span>💬 {{ activity.object.comments.count }}</span>
+                                    <span>👀 {{ activity.object.views }}</span>
+                                </div>
+                            </a>
+                        {% else %}
+                            <a href="{% url 'community:post_detail' activity.object.post.pk %}#comments" class="activity-link">
+                                <div class="activity-title">{{ activity.object.post.title }}</div>
+                                <div class="activity-excerpt">{{ activity.object.content|truncatewords:15 }}</div>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <h3 class="empty-state-title">No Activity Yet</h3>
+                    <p class="empty-state-description">
+                        Be the first to create some activity in the community!
+                    </p>
+                    <a href="{% url 'community:create_post' %}" class="btn btn-success">Create First Post</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-main">&copy; 2025 Sports Arena. Connect with fellow sports enthusiasts.</p>
+            <p class="footer-sub">Share • Discuss • Celebrate Sports Together 🏆</p>
+        </div>
+    </footer>
+
+    <!-- Auto-dismiss messages script -->
+    {% load static %}
+    <script src="{% static 'js/messages.js' %}"></script>
+</body>
+</html>

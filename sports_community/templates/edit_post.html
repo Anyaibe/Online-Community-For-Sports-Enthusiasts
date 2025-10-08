@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
     <title>Edit Post - Sports Arena</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -16,6 +17,7 @@
             
             <nav class="header-nav">
                 <a href="{% url 'community:home' %}" class="nav-link">Home</a>
+                <a href="{% url 'community:activity_feed' %}" class="nav-link">Activity</a>
                 <a href="{% url 'community:create_post' %}" class="nav-link">Create Post</a>
                 <form method="post" action="{% url 'logout' %}" class="logout-form">
                     {% csrf_token %}
@@ -27,14 +29,12 @@
 
     <!-- Messages Display -->
     {% if messages %}
-    <div class="container">
-        <div class="messages-container">
-            {% for message in messages %}
-                <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
+    <div class="messages-container">
+        {% for message in messages %}
+            <div class="message-alert {% if message.tags %}message-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
     </div>
     {% endif %}
 
@@ -89,5 +89,9 @@
             <p class="footer-sub">Share • Discuss • Celebrate Sports Together 🏆</p>
         </div>
     </footer>
+
+    <!-- Auto-dismiss messages script -->
+    {% load static %}
+    <script src="{% static 'js/messages.js' %}"></script>
 </body>
 </html>
