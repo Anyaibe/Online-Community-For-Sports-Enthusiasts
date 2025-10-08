@@ -31,12 +31,12 @@ A **Django-based web application** designed for sports fans to connect, discuss,
 
 ## 🧮 Technologies Used
 
-| Category           | Technology                            |
-| ------------------ | ------------------------------------- |
-| **Backend**        | Django 5.2.6, Python 3.10             |
-| **Frontend**       | HTML5, CSS3 (custom, no frameworks)   |
-| **Database**       | SQLite (development)                  |
-| **Authentication** | Django built-in authentication system |
+| Category           | Technology                                 |
+| ------------------ | ------------------------------------------ |
+| **Backend**        | Django 5.2.6, Python 3.10                  |
+| **Frontend**       | HTML5, CSS3 and JS (custom, no frameworks) |
+| **Database**       | SQLite (development)                       |
+| **Authentication** | Django built-in authentication system      |
 
 ## 🚀 Installation & Setup
 
